@@ -1,3 +1,4 @@
+
 export const specialityData=[
     {
          speciality:"General physician",
@@ -10,7 +11,7 @@ export const specialityData=[
     
 {
          speciality:"Dermatologist",
-         image:"/Images/dermatologist.png"
+          image: '/Images/doc3.jpeg'
     
     },
     
@@ -32,7 +33,7 @@ export const doctors =[
           _id: 'doc1',
           name:'Mahesh Chaudhary',
           image:'/Images/physican.jpg',
-          speciality:'General physican',
+          speciality:'General physician',
           degree:'MBBS',
           experience:'3 Years',
           about:'Dr. Mahesh has a strong commitment to delivering comprehensive medical care.',
@@ -52,8 +53,8 @@ export const doctors =[
      },
       {
           _id: 'doc3',
-          name:'Sagar GC',
-          image:'./Images/doc3.jpeg',
+          name:'Sarita GC',
+          image: '/Images/doc3.jpeg',
           speciality:'Dermatologist',
           degree:'MBBS',
           experience:'3 Years',
