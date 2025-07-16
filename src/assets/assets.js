@@ -37,7 +37,7 @@ export const doctors =[
           degree:'MBBS',
           experience:'3 Years',
           about:'Dr. Mahesh has a strong commitment to delivering comprehensive medical care.',
-          fees:100,
+          fees:700,
           address:'Baneshwor, Kathmandu'
      },
       {
@@ -48,7 +48,7 @@ export const doctors =[
           degree:'MBBS',
           experience:'5 Years',
           about:'Dr. Rita has a strong commitment to delivering comprehensive medical care.',
-          fees:100,
+          fees:700,
           address:'Baneshwor, Kathmandu'
      },
       {
@@ -59,7 +59,7 @@ export const doctors =[
           degree:'MBBS',
           experience:'3 Years',
           about:'Dr. Sagar has a strong commitment to delivering comprehensive medical care.',
-          fees:100,
+          fees:700,
           address:'Kathmandu'
      },
       {
@@ -70,7 +70,7 @@ export const doctors =[
           degree:'MBBS',
           experience:'5 Years',
           about:'Dr. Shanti has a strong commitment to delivering comprehensive medical care.',
-          fees:100,
+          fees:700,
           address:'Bhaktapur'
      },
       {
@@ -81,8 +81,14 @@ export const doctors =[
           degree:'MBBS',
           experience:'4 Years',
           about:'Dr. Nishan has a strong commitment to delivering comprehensive medical care.',
-          fees:100,
+          fees:700,
           address:'Lalitpur'
      }, 
-     
 ]
+
+const assets = {
+  verified_icon: '/Images/verified_icon.png',
+  info_icon: '/Images/info_icon.jpeg'
+}
+
+export default assets
