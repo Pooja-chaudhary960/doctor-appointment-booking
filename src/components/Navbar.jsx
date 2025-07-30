@@ -1,19 +1,42 @@
-import React, { useContext } from 'react'
-import assets from '../assets/assets'
-import { AdminContext } from '../context/AdminContext'
+import React, { useContext } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import assets from '../assets/assets';
+import { AdminContext } from '../context/AdminContext';
 
 const Navbar = () => {
-    const {aToken} = useContext(AdminContext)
+  const { aToken, setAToken } = useContext(AdminContext); // Get token and setter from context
+  const navigate = useNavigate(); // Hook to navigate to other pages
+
+  const handleLogout = () => {
+    // Clear the token from context and localStorage/sessionStorage
+    setAToken(null); // Clear token in context
+    localStorage.removeItem('aToken'); // Remove token from localStorage
+    sessionStorage.removeItem('aToken'); // Remove token from sessionStorage
+
+    // Redirect to the admin login page
+    navigate('/adminlogin');
+  };
 
   return (
-    <div className='flex justify-between items-center px-4 sm:px-10 py-3 border-b bg-white'>
-        <div className='flex items-center gap-2 text-xs'>
-            <img className='w-36 sm:w-40 cursor-pointer' src={assets.admin_logo} alt=''/>
-            <p className='border px-2 py-1'>{aToken ? 'Admin' : 'Doctor'}</p>
-        </div>
-        <button>Logout</button>
+  <div className="flex justify-between items-center px-6 sm:px-10 py-4 border-b bg-white shadow-lg">
+    {/* Logo and Text Section */}
+    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 text-xs sm:text-base">
+      <img className="h-20 sm:h-24 w-auto cursor-pointer" src={assets.Hlogo} alt="Logo" />
+      <div className="flex flex-col items-center sm:items-start gap-1">
+        <p className="text-green-600 text-2xl sm:text-3xl font-bold tracking-wide">CarePoints</p>
+        <p className="border px-3 py-2 rounded-full text-sm font-medium text-gray-600">{aToken ? 'Admin Dashboard' : 'Doctor Dashboard'}</p>
+      </div>
     </div>
-  )
-}
+    {/* Logout Button */}
+    <button
+      onClick={handleLogout}
+      className="bg-primary text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300"
+    >
+      Logout
+    </button>
+  </div>
+);
+
+};
 
 export default Navbar;

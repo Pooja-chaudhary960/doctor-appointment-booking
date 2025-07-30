@@ -1,5 +1,5 @@
 import add_icon from '/images/add_icon.svg';
-import admin_logo from '/images/admin_logo.png';
+import Hlogo from '/images/Hlogo.png';
 import appointment_icon from '/images/appointment_icon.svg';
 import cancel_icon from '/images/cancel_icon.svg';
 import upload_area from '/images/upload_area.svg';
@@ -14,7 +14,7 @@ import people_icon from '/images/people_icon.svg';
 
 const assets = {
     add_icon,
-    admin_logo,
+    Hlogo,
     appointment_icon,
     cancel_icon,
     doctor_icon,
