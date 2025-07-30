@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import config from './config/config.js';  // Ensure this path is correct
 import connectDB from './config/mongodb.js';
+import dotenv from 'dotenv';
 import connectCloudinary from './config/cloudinary.js';
 import adminRouter from './routes/adminRoute.js';
 
@@ -11,6 +12,7 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+dotenv.config(); // This loads the environment variables from the .env file
 //connect cloudinary
 connectCloudinary();
 
