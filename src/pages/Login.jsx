@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
 
 const Login = () => {
+
+  const {backendUrl, token, setToken} = useContext(AppContext)
+
   const [state, setState] = useState('Sign Up'); // Toggle between 'Sign Up' and 'Login'
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -14,51 +18,13 @@ const Login = () => {
   // Handle form submit
   const onSubmitHandler = async (event) => {
     event.preventDefault();
-    setLoading(true); // Show loading state
 
-    try {
-      // Define API URL based on the current state (Sign Up or Login)
-      const url = state === 'Sign Up' ? '/api/signup' : '/api/login';
-      
-      // Prepare data based on the form state (Sign Up or Login)
-      const data = state === 'Sign Up'
-        ? { name, email, password }  // Sign Up fields
-        : { email, password };  // Login fields
+    try{
 
-      const response = await axios.post(url, data);  // Make POST request
+    }catch(error){
 
-      // Log API response for debugging
-      console.log('API Response:', response.data);
-
-      if (response.data.success) {
-        if (state === 'Sign Up') {
-          toast.success('Account created successfully!');
-        } else {
-          toast.success('Login successful!');
-          
-          // Store JWT token in localStorage after successful login
-          localStorage.setItem('aToken', response.data.token);  // Store token
-          console.log('Token stored in localStorage:', localStorage.getItem('aToken'));  // Debugging
-
-          // Redirect to the dashboard after successful login
-          navigate("/admin-dashboard");
-        }
-
-        // Reset form fields after successful submission
-        setEmail('');
-        setPassword('');
-        setName('');
-      } else {
-        toast.error(response.data.message || 'An error occurred');
-      }
-    } catch (error) {
-      console.error('Login Error:', error);
-      toast.error('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);  // Stop loading state
     }
-  };
-
+  }
   return (
     <form className="min-h-[80vh] flex items-center" onSubmit={onSubmitHandler}>
       <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-zinc-600 text-sm shadow-lg">
