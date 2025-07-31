@@ -11,30 +11,37 @@ const Login = () => {
 
     const { setAToken, backendUrl } = useContext(AdminContext);
 
-    const onSubmitHandler = async (event) => {
-        event.preventDefault();
-        try {
-            // Adjust the API endpoint for Admin login and Doctor login based on state
-            let url = backendUrl + '/api/admin/login';
-            if (state === 'Doctor') {
-                url = backendUrl + '/api/doctor/login'; // Assuming you have a separate endpoint for Doctor login
-            }
-
-            const { data } = await axios.post(url, { email, password });
-
-            if (data.success) {
-                // Save token in localStorage and update context
-                localStorage.setItem('aToken', data.token);
-                setAToken(data.token);
-                toast.success('Login successful!');
-            } else {
-                toast.error(data.message || 'Login failed');
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error('An error occurred during login');
+  const onSubmitHandler = async (event) => {
+    event.preventDefault();
+    try {
+        // Adjust the API endpoint for Admin login and Doctor login based on state
+        let url = backendUrl + '/api/admin/login'; // Default to Admin login
+        if (state === 'Doctor') {
+            url = backendUrl + '/api/doctor/login'; // Use Doctor login URL if state is 'Doctor'
         }
-    };
+
+        // Log the URL and the data being sent for debugging
+        console.log('Sending request to:', url);
+        console.log('Request Data:', { email, password });
+
+        const { data } = await axios.post(url, { email, password });
+
+        // Log the API response for debugging
+        console.log('API Response:', data);
+
+        if (data.success) {
+            // Save token in localStorage and update context
+            localStorage.setItem('aToken', data.token);
+            setAToken(data.token); // Assuming you are using context to store the token globally
+            toast.success('Login successful!');
+        } else {
+            toast.error(data.message || 'Login failed');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        toast.error('An error occurred during login');
+    }
+};
 
     return (
         <form onSubmit={onSubmitHandler} className="min-h-[80vh] flex items-center">
