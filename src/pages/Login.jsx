@@ -1,48 +1,61 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [state, setState] = useState('Sign Up');
+  const [state, setState] = useState('Sign Up'); // Toggle between 'Sign Up' and 'Login'
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Used for navigation after login
 
+  // Handle form submit
   const onSubmitHandler = async (event) => {
     event.preventDefault();
-    setLoading(true);
+    setLoading(true); // Show loading state
 
     try {
+      // Define API URL based on the current state (Sign Up or Login)
       const url = state === 'Sign Up' ? '/api/signup' : '/api/login';
-
+      
+      // Prepare data based on the form state (Sign Up or Login)
       const data = state === 'Sign Up'
-        ? { name, email, password }
-        : { email, password };
+        ? { name, email, password }  // Sign Up fields
+        : { email, password };  // Login fields
 
-      const response = await axios.post(url, data);
+      const response = await axios.post(url, data);  // Make POST request
 
-      console.log('API Response:', response.data);  // Debugging
+      // Log API response for debugging
+      console.log('API Response:', response.data);
 
       if (response.data.success) {
         if (state === 'Sign Up') {
           toast.success('Account created successfully!');
         } else {
           toast.success('Login successful!');
-          // Store token in localStorage
-          localStorage.setItem('aToken', response.data.token);
+          
+          // Store JWT token in localStorage after successful login
+          localStorage.setItem('aToken', response.data.token);  // Store token
           console.log('Token stored in localStorage:', localStorage.getItem('aToken'));  // Debugging
+
+          // Redirect to the dashboard after successful login
+          navigate("/admin-dashboard");
         }
+
+        // Reset form fields after successful submission
         setEmail('');
         setPassword('');
+        setName('');
       } else {
         toast.error(response.data.message || 'An error occurred');
       }
     } catch (error) {
-      console.error(error);
+      console.error('Login Error:', error);
       toast.error('Something went wrong. Please try again.');
     } finally {
-      setLoading(false);
+      setLoading(false);  // Stop loading state
     }
   };
 
