@@ -1,8 +1,41 @@
 import React, { useContext } from 'react';
 import { AppContext } from '../context/AppContext';
+import { useState } from 'react';
+import { useEffect } from 'react';
 
 const MyAppointments = () => {
-  const { doctors } = useContext(AppContext);
+  const { backendUrl, token } = useContext(AppContext);
+
+  const [appointments, setAppointments] = useState([])
+
+  const getUserAppointments = async ()=>{
+    try{
+      const { data } = await axios.post(`${backendUrl}/api/user/book-appointment`,{ userId: userData._id, docId, slotDate, slotTime},
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        })
+    if(data.success){
+      setAppointments(data.appointments.reverse())
+      console.log(data.appointments);
+    }else{
+      
+    }
+    }catch(error){
+      console.log(error)
+      toast.error(error.message)
+
+    }
+  }
+
+  useEffect(()=>{
+    if(token){
+      getUserAppointments()
+    }
+  },[token])
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -17,7 +50,7 @@ const MyAppointments = () => {
             {/* Doctor Image */}
             <div className="w-32 h-32">
               <img
-                src={item.image}
+                src={item.docData.image}
                 alt={item.name}
                 className="w-full h-full object-cover rounded-lg"
               />
@@ -25,12 +58,12 @@ const MyAppointments = () => {
 
             {/* Doctor Info */}
             <div className="flex-1">
-              <p className="text-lg font-bold">{item.name}</p>
+              <p className="text-lg font-bold">{item.docData.name}</p>
               <p className="text-sm text-gray-600">{item.speciality}</p>
               <p className="text-sm font-medium mt-2">Address:</p>
-              <p className="text-sm text-gray-700">{item.address}</p>
+              <p className="text-sm text-gray-700">{item.docData.address}</p>
               <p className="text-sm text-gray-800 mt-2">
-                <span className="font-semibold">Date & Time:</span> 15 July 2025 | 8:30 PM
+                <span className="font-semibold">Date & Time:</span> {item.slotDate} | {item.slotTime} 
               </p>
             </div>
 
