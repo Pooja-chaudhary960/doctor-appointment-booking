@@ -2,13 +2,16 @@ import validator from 'validator';
 import bcrypt from 'bcrypt';
 import userModel from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
+import {v2 as cloudinary} from 'cloudinary'
+import doctorModel from '../models/doctorModel.js';
+import appointmentModel from '../models/appointmentModel.js';
 
 
 // API to register user
 
 const registerUser = async (req,res)=>{
     try{
-    const {name, email, password} = req.body;
+    const {name, email, password,} = req.body;
     if(!name || !email || !password){
         return res.json({success:false,message:"Missing Details"})
     }
@@ -30,7 +33,8 @@ const registerUser = async (req,res)=>{
     const userData ={
         name,
         email,
-        password : hashedPassword
+        password : hashedPassword,
+     
     }
 
     const newUser = new userModel(userData)
@@ -66,4 +70,136 @@ const loginUser = async (req,res)=>{
         res.json({success:false,message:error.message})
     }
 }
-export {registerUser, loginUser};
+
+// ApI to get user profile data
+
+const getProfile = async (req, res) => {
+  try {
+    // Ensure req.userId is available
+    if (!req.userId) {
+      return res.status(401).json({ success: false, message: 'User not authenticated. Please log in.' });
+    }
+
+    // Fetch user data using the userId
+    const userData = await userModel.findById(req.userId).select('-password');
+
+    // If user is not found, return an error
+    if (!userData) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    // Send the user data as response
+    res.json({ success: true, userData });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
+
+// API to update user profile
+const updateProfile = async (req, res) => {
+  try {
+    const { userId, name, phone, address, dob, gender } = req.body;  // Corrected 'bod' to 'dob'
+    const imageFile = req.file; // Corrected to req.file to access the uploaded image
+
+    // Check if required fields are present
+    if (!userId || !name || !phone || !dob || !gender) {  // Corrected condition
+      return res.status(400).json({ success: false, message: "Data Missing" });
+    }
+
+    // Find the user by ID and update the fields
+    const updatedUser = await userModel.findByIdAndUpdate(userId, {
+      name,
+      phone,
+      address, 
+      dob,     
+      gender
+    }, { new: true }); // 'new: true' to return the updated document
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // If an image is provided, upload it to Cloudinary and update the user's image URL
+    if (imageFile) {
+      const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: 'image' });
+      const imageURL = imageUpload.secure_url;
+
+      // Update the image URL in the database
+      updatedUser.image = imageURL;
+      await updatedUser.save();
+    }
+
+    res.status(200).json({ success: true, message: "Profile Updated", userData: updatedUser });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+// API to book appointment
+const bookAppointment = async (req, res)=>{
+  try{
+    const {userId, docId, slotDate, slotTime} = req.body;
+
+    const docData = await doctorModel.findById(docId).select('-password')
+
+    if(!docData.available){
+      return res.json({success:false, message:"Doctor not available"})
+    }
+    let slots_booked = docData.slots_booked
+
+    // checking for slot availability 
+    if(slots_booked[slotDate]){
+      if(slots_booked[slotDate].includes[slotTime]){
+        return res.json({success:false, message:'Slot not available'})
+      }else{
+        slots_booked[slotDate].push(slotTime)
+      }
+    }else{
+      slots_booked[slotDate] =[]
+      slots_booked[slotDate].push(slotTime)
+    }
+    const userData = await userModel.findById(userId).select('-password')
+
+    delete docData.slots_booked
+
+    const appointmentData = {
+      userId,
+      docId,
+      userData,
+      docData,
+      amount: docData.fees,
+      slotTime,
+      slotDate,
+      date: Date.now()
+    }
+
+    // save in database
+    const newAppointment = new appointmentModel(appointmentData)
+    await newAppointment.save()
+
+    // save new slots data in docData
+    await doctorModel.findByIdAndUpdate(docId,{slots_booked})
+
+    res.json({success:true, message:"Appointment Booked"})
+
+  }catch(error){
+    res.status(500).json({ success: false, message: error.message });
+
+  }
+}
+
+// ApI to get user appointment for frontend my-appointments page
+const listAppointment = async(req,res)=>{
+  try{
+    const {userId} = req.body;
+    const appointments = await appointmentModel.find({userId})
+
+    res.json({success:true,appointments})
+  }catch(error){
+    console.log(error);
+    res.json({success:false, message:error.message})
+  }
+}
+export {registerUser, loginUser, getProfile, updateProfile, bookAppointment,listAppointment};
