@@ -5,6 +5,9 @@ import jwt from 'jsonwebtoken';
 import {v2 as cloudinary} from 'cloudinary'
 import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
+import axios from 'axios';
+import Payment from '../models/paymentModel.js';
+import config from '../config/config.js'; 
 
 
 // API to register user
@@ -190,16 +193,125 @@ const bookAppointment = async (req, res)=>{
   }
 }
 
-// ApI to get user appointment for frontend my-appointments page
-const listAppointment = async(req,res)=>{
-  try{
-    const {userId} = req.body;
-    const appointments = await appointmentModel.find({userId})
+const listAppointment = async (req, res) => {
+  try {
+    const userId = req.userId; // Access userId set by authUser middleware
 
-    res.json({success:true,appointments})
+    // Fetch the appointments for the authenticated user
+    const appointments = await appointmentModel.find({ userId });
+
+    // If no appointments are found, return an empty array
+    if (appointments.length === 0) {
+      return res.json({ success: true, appointments: [] });
+    }
+
+    // If appointments exist, return them
+    res.json({ success: true, appointments });
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    res.status(500).json({ success: false, message: 'Error fetching appointments' });
+  }
+};
+
+// API to cancel appointment 
+const cancelAppointment = async(req, res)=>{
+  try{
+
+    const {userId, appointmentId} = req.body
+    const appointmentData = await appointmentModel.findById(appointmentId)
+
+    // verify appointment user
+    if(appointmentData.userId !== userId){
+      return res.json({success:false,message:"Unauthorized action"})
+    }
+    await appointmentModel.findByIdAndUpdate(appointmentId, {cancelled:true})
+    // releasing doctor slot
+
+    const {docId, slotDate, slotTime} = appointmentData
+
+    const doctorData = await doctorModel.findById(docId)
+
+    let slots_booked = doctorData.slots_booked
+
+    slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
+
+    await doctorModel.findByIdAndUpdate(docId, {slots_booked})
+
+    res.json({success:true, message:'Appointment Cancelled'})
+
   }catch(error){
-    console.log(error);
-    res.json({success:false, message:error.message})
+    console.log(error)
+    res.json({success: false, message:error.message})
   }
 }
-export {registerUser, loginUser, getProfile, updateProfile, bookAppointment,listAppointment};
+
+const initiatePayment = async (req, res) => {
+  try {
+    console.log('Payment request received:', req.body);
+
+    const { amount, userId, appointmentId } = req.body;
+
+    // Example of error-prone logic
+    if (!amount || !userId || !appointmentId) {
+      console.log('Missing data');
+      return res.status(400).json({ success: false, message: 'Missing data' });
+    }
+
+    // Call the third-party payment API here (e.g., Khatli)
+    const response = await axios.post('https://api.khatli.com/payment', {
+      amount,
+      userId,
+      appointmentId
+    });
+
+    if (response.data.success) {
+      res.json({ success: true, paymentUrl: response.data.paymentUrl });
+    } else {
+      console.log('Payment initiation failed:', response.data);
+      return res.status(500).json({ success: false, message: 'Failed to initiate payment' });
+    }
+  } catch (error) {
+    console.error('Error initiating payment:', error);
+    res.status(500).json({ success: false, message: 'Error initiating payment' });
+  }
+};
+
+// Function to handle the Khatli payment callback
+const paymentCallback = async (req, res) => {
+  try {
+    const { paymentStatus, transactionId, appointmentId, amount } = req.body;
+
+    if (paymentStatus === 'success') {
+      // Find the payment record
+      const payment = await Payment.findOneAndUpdate(
+        { appointmentId, transactionId },
+        { paymentStatus: 'successful', paymentDate: new Date() },
+        { new: true }
+      );
+
+      if (!payment) {
+        return res.status(404).json({ success: false, message: 'Payment record not found' });
+      }
+
+      // Update the appointment to mark it as paid
+      await appointmentModel.findByIdAndUpdate(appointmentId, { payment: true });
+
+      res.json({ success: true, message: 'Payment successful and appointment updated.' });
+    } else {
+      // Handle failed payment status
+      await Payment.findOneAndUpdate(
+        { appointmentId, transactionId },
+        { paymentStatus: 'failed' },
+        { new: true }
+      );
+
+      res.status(400).json({ success: false, message: 'Payment failed' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Error processing payment callback' });
+  }
+};
+
+
+export {registerUser, loginUser, getProfile, updateProfile, bookAppointment,listAppointment, cancelAppointment, initiatePayment,paymentCallback};
