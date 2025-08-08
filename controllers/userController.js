@@ -251,38 +251,45 @@ const initiatePayment = async (req, res) => {
 
     const { amount, userId, appointmentId } = req.body;
 
-    // Example of error-prone logic
     if (!amount || !userId || !appointmentId) {
       console.log('Missing data');
       return res.status(400).json({ success: false, message: 'Missing data' });
     }
 
-    // Call the third-party payment API here (e.g., Khatli)
+    console.log('Proceeding to call payment API...');
     const response = await axios.post('https://api.khatli.com/payment', {
       amount,
       userId,
       appointmentId
     });
 
+    console.log('Payment API response:', response.data);
+
     if (response.data.success) {
-      res.json({ success: true, paymentUrl: response.data.paymentUrl });
+      return res.json({ success: true, paymentUrl: response.data.paymentUrl });
     } else {
       console.log('Payment initiation failed:', response.data);
       return res.status(500).json({ success: false, message: 'Failed to initiate payment' });
     }
   } catch (error) {
     console.error('Error initiating payment:', error);
-    res.status(500).json({ success: false, message: 'Error initiating payment' });
+    return res.status(500).json({ success: false, message: 'Error initiating payment' });
   }
 };
 
-// Function to handle the Khatli payment callback
+// Handling the payment callback
 const paymentCallback = async (req, res) => {
   try {
     const { paymentStatus, transactionId, appointmentId, amount } = req.body;
 
+    // Ensure the necessary fields are present
+    if (!paymentStatus || !transactionId || !appointmentId || !amount) {
+      return res.status(400).json({ success: false, message: 'Missing necessary payment data' });
+    }
+
+    // Check if payment is successful
     if (paymentStatus === 'success') {
-      // Find the payment record
+      // Find and update the payment record
       const payment = await Payment.findOneAndUpdate(
         { appointmentId, transactionId },
         { paymentStatus: 'successful', paymentDate: new Date() },
@@ -293,25 +300,33 @@ const paymentCallback = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Payment record not found' });
       }
 
-      // Update the appointment to mark it as paid
-      await appointmentModel.findByIdAndUpdate(appointmentId, { payment: true });
+      // Mark the appointment as paid
+      const appointment = await Appointment.findByIdAndUpdate(appointmentId, { paymentStatus: 'paid' }, { new: true });
+      
+      if (!appointment) {
+        return res.status(404).json({ success: false, message: 'Appointment not found' });
+      }
 
-      res.json({ success: true, message: 'Payment successful and appointment updated.' });
+      // Send a success response
+      return res.json({ success: true, message: 'Payment successful and appointment updated.' });
     } else {
       // Handle failed payment status
-      await Payment.findOneAndUpdate(
+      const payment = await Payment.findOneAndUpdate(
         { appointmentId, transactionId },
         { paymentStatus: 'failed' },
         { new: true }
       );
 
-      res.status(400).json({ success: false, message: 'Payment failed' });
+      if (!payment) {
+        return res.status(404).json({ success: false, message: 'Payment record not found for failure' });
+      }
+
+      return res.status(400).json({ success: false, message: 'Payment failed' });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Error processing payment callback' });
+    console.error('Error processing payment callback:', error);
+    return res.status(500).json({ success: false, message: 'Error processing payment callback' });
   }
 };
-
 
 export {registerUser, loginUser, getProfile, updateProfile, bookAppointment,listAppointment, cancelAppointment, initiatePayment,paymentCallback};
