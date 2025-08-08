@@ -2,6 +2,8 @@ import axios from "axios";
 import { AppContext } from "../context/AppContext";
 import { useState, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
+import {useNavigate} from 'react-router-dom'
+
 
 const MyAppointments = () => {
   const { backendUrl, token, userData, getDoctorsData } =
@@ -29,6 +31,8 @@ const MyAppointments = () => {
       dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2]
     );
   };
+
+  const navigate = useNavigate()
 
   // Function to get user appointments
   const getUserAppointments = async () => {
