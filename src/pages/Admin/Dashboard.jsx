@@ -3,12 +3,12 @@ import { useContext } from "react";
 import { AdminContext } from "../../context/AdminContext";
 import { useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
+import assets from '../../assets/assets';
 
 const Dashboard = () => {
-  const { aToken, getDashData, cancelAppointment, dashData } =
-    useContext(AdminContext);
+  const { aToken, getDashData, cancelAppointment, dashData } = useContext(AdminContext);
   const {slotDateFormat} = useContext(AppContext);
-  className = "text-xl font-semibold text-gray-400";
+  
   useEffect(() => {
     if (aToken) {
       getDashData();
@@ -41,7 +41,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-2 bg-white p-4 min-w-52 rounded border-gray-100 cursor-pointer hover:scale-105 transition-all">
             <img
               className="text-xl font-semibold text-gray-400"
-              src={assets.patient_icon}
+              src={assets.patients_icon}
               alt=""
             />
             <div>

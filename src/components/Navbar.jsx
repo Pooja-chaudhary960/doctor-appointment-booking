@@ -2,19 +2,24 @@ import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import assets from '../assets/assets';
 import { AdminContext } from '../context/AdminContext';
+import { DoctorContext } from '../context/DoctorContext';
 
 const Navbar = () => {
   const { aToken, setAToken } = useContext(AdminContext); // Get token and setter from context
+  const {dToken, setDToken} = useContext(DoctorContext)
   const navigate = useNavigate(); // Hook to navigate to other pages
 
   const handleLogout = () => {
+     navigate('/');
     // Clear the token from context and localStorage/sessionStorage
-    setAToken(null); // Clear token in context
-    localStorage.removeItem('aToken'); // Remove token from localStorage
-    sessionStorage.removeItem('aToken'); // Remove token from sessionStorage
-
-    // Redirect to the admin login page
-    navigate('/adminlogin');
+    aToken && setAToken(''); // Clear token in context
+    aToken && localStorage.removeItem('aToken'); // Remove token from localStorage
+    aToken && sessionStorage.removeItem('aToken'); // Remove token from sessionStorage
+    
+   dToken && setDToken('');
+   dToken && localStorage.removeItem('dToken');
+   dToken && sessionStorage.removeItem('dToken');
+   
   };
 
   return (
