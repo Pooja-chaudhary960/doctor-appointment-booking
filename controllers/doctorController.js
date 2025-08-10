@@ -63,7 +63,7 @@ const loginDoctor = async (req,res)=>{
 // API to get doctor appointments for doctor panel
 const appointmentsDoctor = async (req, res) =>{
   try{
-    const {docId} = req.body
+    const {docId} = req;
     const appointments = await appointmentModel.find({docId})
 
     res.json({success: true, appointments})
@@ -112,35 +112,56 @@ const appointmentCancel = async (req, res) =>{
 }
 
 // API to get dashboard data for doctor panel
-const doctorDashboard = async (req, res)=>{
-  try{
-    const {docId} = req.body
-
-    const appointments = await appointmentModel.find({docId})
-    let earnings = 0
-
-    appointments.map((item)=>{
-      if(item.isCompleted || item.payment){
-        earnings += item.amount
-      }
-    })
-    let patients = []
-
-    appointments.map((item)=>{
-      if(!patients.includes(item.userId)){
-        patients.push(item.userId)
-      }
-    })
-    const dashData ={
-      earnings,
-      appointments: appointments.length,
-      patients: patients.length,
-      latestAppointments: appointmentCancel.reverse().slice(0,5)
+const doctorDashboard = async (req, res) => {
+  try {
+    if (!req.docId) {
+      return res.status(400).json({ success: false, message: 'Doctor not authenticated' });
     }
-    res.json({success:true, dashData})
+
+    // Fetch appointments using the doctor's ID (which is now req.docId)
+    const appointments = await appointmentModel.find({ docId: req.docId });
+
+    res.status(200).json({ success: true, appointments });
+  } catch (error) {
+    console.error('Error fetching doctor dashboard:', error);
+    res.status(500).json({ success: false, message: 'Error fetching doctor dashboard', error: error.message });
+  }
+};
+
+// ApI to get doctor Profile for Doctor Panel
+const doctorProfile = async (req, res) => {
+  try {
+    const docId = req.docId;  // Get docId from the token, not from body
+
+    console.log("Doc ID from token:", docId);  // Check if this is correct
+
+    const doctor = await doctorModel.findById(docId);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+
+    res.json({
+      success: true,
+      profileData: doctor,
+    });
+  } catch (error) {
+    console.error("Error in doctorProfile:", error.message);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+// API to update doctor profile data from Doctor Panel
+const updateDoctorProfile = async (req,res)=>{
+  try{
+    const {docId, fees, available} = req.body
+
+    await doctorModel.findByIdAndUpdate(docId, {fees, address, available})
+
+    res.json({success:true, message:'Profile Updated'})
+
   }catch(error){
     console.log(error)
     res.json({success:false,message:error.message})
   }
 }
-export {changedAvailability, doctorList, loginDoctor, appointmentsDoctor, appointmentComplete, appointmentCancel, doctorDashboard};
+export {changedAvailability, doctorList, loginDoctor, appointmentsDoctor, appointmentComplete, appointmentCancel, doctorDashboard, doctorProfile, updateDoctorProfile};

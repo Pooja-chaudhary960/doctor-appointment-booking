@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import config from './config/config.js';  // Ensure this path is correct
+import config from './config/config.js';  
 import connectDB from './config/mongodb.js';
 import dotenv from 'dotenv';
 import connectCloudinary from './config/cloudinary.js';
