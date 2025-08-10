@@ -148,7 +148,7 @@ const MyAppointments = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-3 mt-4 md:mt-0">
-                {!item.cancelled && !item.payment && (
+                {!item.cancelled && !item.payment && !item.isCompleted && (
                   <button
                     className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition"
                     onClick={() => initiatePayment(item._id, item.amount)} // Trigger the initiatePayment function
@@ -157,7 +157,7 @@ const MyAppointments = () => {
                   </button>
                 )}
 
-                {!item.cancelled && (
+                {!item.cancelled && !item.payment && !item.isCompleted && (
                   <button
                     onClick={() => cancelAppointment(item._id)}
                     className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
@@ -165,7 +165,7 @@ const MyAppointments = () => {
                     Cancel Appointment{" "}
                   </button>
                 )}
-                {item.cancelled && (
+                {item.cancelled && !item.payment && !item.isCompleted &&(
                   <button className="sm:min-w-48 py-2 border border-red-500 rounded text-red-500">
                     Appointment cancelled
                   </button>
